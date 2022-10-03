@@ -8,6 +8,10 @@
 #define RELEASED 2
 #define UNKNOWN 3
 
+#define DEFAULT_SHOT_THRESHOLD_MS 15
+#define DEFAULT_HOLD_THRESHOLD_MS 150
+#define DEFAULT_HOLD_NOTIFICATION_MS 500
+
 class ButtonEnhanced {
 
     uint8_t buttonPin;
@@ -24,6 +28,18 @@ class ButtonEnhanced {
     typedef void (* onHold);        //When a button is kept pressed.
     typedef void (* onRelease);     //When a button is released.
 
+    void setStartMs(const unsigned long& startMs) {
+        this->startMS = startMs;
+    }
+
+    void setTimeMs(const unsigned long& timeMs) {
+        this->timeMS = timeMs;
+    }
+
+    void setHoldNotificationLastMs(const unsigned long& holdNotificationLastMs) {
+        this->holdNotificationLastMS = holdNotificationLastMs;
+    }
+
 public:
 
     ButtonEnhanced() {
@@ -31,6 +47,16 @@ public:
 
     ButtonEnhanced(const uint8_t& buttonPin) : buttonPin(buttonPin) {
         pinMode(buttonPin, INPUT);
+        this->setDefaults();
+    }
+
+    void setDefaults() {
+        this->setStartMs(0);
+        this->setTimeMs(0);
+        this->setShotThresholdMs(DEFAULT_SHOT_THRESHOLD_MS);
+        this->setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
+        this->setHoldNotificationLastMs(0);
+        this->setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
     }
 
     /**
@@ -41,7 +67,7 @@ public:
     * Changing the notification delay will increase/decrease the smoothness of the movement.
     */
     bool isHoldNotificationTimePassed() {
-        return (millis() - holdNotificationLastMS) >= holdNotificationMS;
+        return (millis() - this->holdNotificationLastMS) >= this->holdNotificationMS;
     }
 
     /**
@@ -50,7 +76,7 @@ public:
      * The @param holdThresholdMS defines after what activation/pressing time the button is in hold phase.
      */
     bool isEnteredHold() {
-        return timeMS >= holdThresholdMS;
+        return this->timeMS >= this->holdThresholdMS;
     }
 
     /**
@@ -64,11 +90,11 @@ public:
     uint8_t getState() {
         bool buttonRead = digitalRead(this->buttonPin);
 
-        if (buttonRead && startMS == 0)
+        if (buttonRead && this->startMS == 0)
             return PRESSED;
-        else if (buttonRead && startMS > 0)
+        else if (buttonRead && this->startMS > 0)
             return INTERMEDIATE;
-        else if (!buttonRead && startMS != 0)
+        else if (!buttonRead && this->startMS != 0)
             return RELEASED;
         else
             return UNKNOWN;
@@ -78,28 +104,28 @@ public:
         switch (getState()) {
 
             case PRESSED:
-                startMS = millis();
+                this->startMS = millis();
                 break;
 
             case INTERMEDIATE:
-                timeMS = millis() - startMS;
+                this->timeMS = millis() - this->startMS;
 
-                if (isEnteredHold() && isHoldNotificationTimePassed()) {
+                if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
                     Serial.println("Hold");
-                    holdNotificationLastMS = millis();
+                    this->holdNotificationLastMS = millis();
                 }
 
                 break;
 
             case RELEASED:
-                timeMS = millis() - startMS;
+                this->timeMS = millis() - this->startMS;
 
-                if (timeMS >= shotThresholdMS && timeMS < holdThresholdMS) {
+                if (this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
                     Serial.println("Shot!");
                 }
 
-                startMS = 0;
-                timeMS = 0;
+                this->startMS = 0;
+                this->timeMS = 0;
                 break;
 
             case UNKNOWN:
@@ -107,6 +133,17 @@ public:
         }
     }
 
+    void setShotThresholdMs(const unsigned long& shotThresholdMs) {
+        this->shotThresholdMS = shotThresholdMs;
+    }
+
+    void setHoldThresholdMs(const unsigned long& holdThresholdMs) {
+        this->holdThresholdMS = holdThresholdMs;
+    }
+
+    void setHoldNotificationMs(const unsigned long& holdNotificationMs) {
+        this->holdNotificationMS = holdNotificationMs;
+    }
 };
 
 #endif //ITSGOSHO_BUTTON_ENHANCED_H
