@@ -39,32 +39,57 @@ bool isEnteredHold() {
     return timeMS >= holdThresholdMS;
 }
 
+#define PRESSED 0
+#define INTERMEDIATE 1
+#define RELEASED 2
+#define UNKNOWN 3
+
+
+uint8_t getState() {
+    bool buttonRead = digitalRead(BUTTON_PIN);
+
+    if (buttonRead && startMS == 0)
+        return PRESSED;
+    else if (buttonRead && startMS > 0)
+        return INTERMEDIATE;
+    else if (!buttonRead && startMS != 0)
+        return RELEASED;
+    else
+        return UNKNOWN;
+}
+
 void loop() {
 
-    int buttonState = digitalRead(BUTTON_PIN);
+    switch (getState()) {
 
-    if (buttonState && startMS == 0) { // Pressed
-        startMS = millis();
-    }
+        case PRESSED:
 
-    if (buttonState && startMS > 0) { // Intermediate. Still not released, but pressed.
-        timeMS = millis() - startMS;
+            startMS = millis();
+            break;
 
-        if (isEnteredHold() && isHoldNotificationTimePassed()) {
-            Serial.println("Hold");
-            holdNotificationLastMS = millis();
-        }
-    }
+        case INTERMEDIATE:
+            timeMS = millis() - startMS;
 
-    if (!buttonState && startMS != 0) { // Released
-        timeMS = millis() - startMS;
+            if (isEnteredHold() && isHoldNotificationTimePassed()) {
+                Serial.println("Hold");
+                holdNotificationLastMS = millis();
+            }
 
-        if (timeMS >= shotThresholdMS && timeMS < holdThresholdMS) {
-            Serial.println("Shot!");
-        }
+            break;
 
-        startMS = 0;
-        timeMS = 0;
+        case RELEASED:
+            timeMS = millis() - startMS;
+
+            if (timeMS >= shotThresholdMS && timeMS < holdThresholdMS) {
+                Serial.println("Shot!");
+            }
+
+            startMS = 0;
+            timeMS = 0;
+            break;
+
+        case UNKNOWN:
+            break;
     }
 
     /* if (timeMS != 0) {
