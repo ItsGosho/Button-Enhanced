@@ -5,10 +5,20 @@
 
 ButtonEnhanced buttonEnhanced;
 
+void onButtonShot() {
+    Serial.println("Shot!");
+}
+
+void onButtonHold() {
+    Serial.println("Hold!");
+}
+
 void setup() {
     Serial.begin(9600);
 
     buttonEnhanced = ButtonEnhanced(BUTTON_PIN);
+    buttonEnhanced.setOnShotCallback(onButtonShot);
+    buttonEnhanced.setOnHoldCallback(onButtonHold);
 }
 
 void loop() {

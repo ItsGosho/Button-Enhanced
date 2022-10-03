@@ -14,6 +14,11 @@
 
 class ButtonEnhanced {
 
+    typedef void (* onShot)();        //When a button is pressed and released immediately
+    //typedef void (* onPress)();       //When a button is pressed.
+    typedef void (* onHold)();        //When a button is kept pressed.
+    //typedef void (* onRelease)();     //When a button is released.
+
     uint8_t buttonPin;
     unsigned long startMS = 0;
     unsigned long timeMS = 0;
@@ -23,10 +28,8 @@ class ButtonEnhanced {
     unsigned long holdNotificationLastMS = 0;
     unsigned long holdNotificationMS = 500;
 
-    typedef void (* onShot);        //When a button is pressed and released immediately
-    typedef void (* onPress);       //When a button is pressed.
-    typedef void (* onHold);        //When a button is kept pressed.
-    typedef void (* onRelease);     //When a button is released.
+    onShot onShotCallback;
+    onHold onHoldCallback;
 
     void setStartMs(const unsigned long& startMs) {
         this->startMS = startMs;
@@ -110,8 +113,8 @@ public:
             case INTERMEDIATE:
                 this->timeMS = millis() - this->startMS;
 
-                if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
-                    Serial.println("Hold");
+                if (this->onHoldCallback && this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
+                    this->onHoldCallback();
                     this->holdNotificationLastMS = millis();
                 }
 
@@ -120,8 +123,8 @@ public:
             case RELEASED:
                 this->timeMS = millis() - this->startMS;
 
-                if (this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
-                    Serial.println("Shot!");
+                if (this->onShotCallback && this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
+                    this->onShotCallback();
                 }
 
                 this->startMS = 0;
@@ -143,6 +146,14 @@ public:
 
     void setHoldNotificationMs(const unsigned long& holdNotificationMs) {
         this->holdNotificationMS = holdNotificationMs;
+    }
+
+    void setOnShotCallback(void (* callback)()) {
+        this->onShotCallback = callback;
+    }
+
+    void setOnHoldCallback(void (* callback)()) {
+        this->onHoldCallback = callback;
     }
 };
 
