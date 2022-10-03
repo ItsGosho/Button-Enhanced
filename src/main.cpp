@@ -44,7 +44,14 @@ bool isEnteredHold() {
 #define RELEASED 2
 #define UNKNOWN 3
 
-
+/**
+ * A button can be in 3 different states.
+ * PRESSED: We detected that there is a press of the provided button.
+ * INTERMEDIATE: There was no release of the button since the last reading. The button is still kept pressed.
+ * RELEASED: The button has been released.
+ *
+ * If the state can't be determined, then state UNKNOWN: 3 is returned.
+ */
 uint8_t getState() {
     bool buttonRead = digitalRead(BUTTON_PIN);
 
@@ -63,7 +70,6 @@ void loop() {
     switch (getState()) {
 
         case PRESSED:
-
             startMS = millis();
             break;
 
