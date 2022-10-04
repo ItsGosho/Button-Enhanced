@@ -4501,14 +4501,14 @@
       "updated": 1664824086871,
       "link": null,
       "locked": false,
-      "text": "PRESSED",
+      "text": "PRESSED_READING",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 15,
       "containerId": null,
-      "originalText": "PRESSED"
+      "originalText": "PRESSED_READING"
     },
     {
       "id": "XOZQRGt8lcabgmb8eLq15",
@@ -4540,14 +4540,14 @@
       "updated": 1664824086871,
       "link": null,
       "locked": false,
-      "text": "INTERMEDIATE",
+      "text": "INTERMEDIATE_READING",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 15,
       "containerId": null,
-      "originalText": "INTERMEDIATE"
+      "originalText": "INTERMEDIATE_READING"
     },
     {
       "id": "rzqtU16AFJEloh-lJbu2w",
@@ -4579,14 +4579,14 @@
       "updated": 1664824086871,
       "link": null,
       "locked": false,
-      "text": "RELEASED",
+      "text": "RELEASED_READING",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "baseline": 15,
       "containerId": null,
-      "originalText": "RELEASED"
+      "originalText": "RELEASED_READING"
     },
     {
       "id": "JV-ZO8umiV7nXOCUvfQQm",

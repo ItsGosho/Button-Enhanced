@@ -7,10 +7,16 @@ ButtonEnhanced buttonEnhanced;
 
 void onButtonShot() {
     Serial.println("Shot!");
+    Serial.println(buttonEnhanced.getTotalShots());
+
+    if(buttonEnhanced.getTotalShots() >= 3) {
+        buttonEnhanced.pause();
+    }
 }
 
 void onButtonHold() {
     Serial.println("Hold!");
+    Serial.println(buttonEnhanced.getTotalHolds());
 }
 
 void setup() {
@@ -23,13 +29,18 @@ void setup() {
 
 void loop() {
 
-    buttonEnhanced.checkState();
+    buttonEnhanced.refreshReading();
 
-    /* if (timeMS != 0) {
-         Serial.println(timeMS);
+    if(buttonEnhanced.getTotalShots() >= 5)
+        buttonEnhanced.resumeCallbacks();
 
-         //TODO: I want to inform if it was single click or
+  /*  if (buttonEnhanced.isShot()) {
+        Serial.println("Shot!");
+        Serial.println(buttonEnhanced.getTotalShots());
+    }
 
-         timeMS = 0;
-     }*/
+    if (buttonEnhanced.isHold()) {
+        Serial.println("Hold!");
+        Serial.println(buttonEnhanced.getTotalHolds());
+    }*/
 }
