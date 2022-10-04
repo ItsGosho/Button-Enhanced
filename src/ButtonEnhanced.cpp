@@ -233,7 +233,7 @@ public:
         this->totalHolds = 0;
     }
 
-    void clearTotals() {
+    void clearTotalsCounting() {
         this->clearTotalShots();
         this->clearTotalHolds();
     }
@@ -246,7 +246,7 @@ public:
         this->isTotalHoldsPaused = true;
     }
 
-    void pauseTotals() {
+    void pauseTotalsCounting() {
         this->pauseTotalShotsCounting();
         this->pauseTotalHoldsCounting();
     }
@@ -259,7 +259,7 @@ public:
         this->isTotalHoldsPaused = false;
     }
 
-    void resumeTotals() {
+    void resumeTotalsCounting() {
         this->resumeTotalShotsCounting();
         this->resumeTotalHoldsCounting();
     }
