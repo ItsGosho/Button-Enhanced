@@ -2,11 +2,16 @@
 #define ITSGOSHO_BUTTON_ENHANCED_H
 
 #include <Arduino.h>
+#include <cstdint>
 
-#define PRESSED 0
-#define INTERMEDIATE 1
-#define RELEASED 2
-#define UNKNOWN 3
+#define PRESSED_READING 0
+#define INTERMEDIATE_READING 1
+#define RELEASED_READING 2
+#define UNKNOWN_READING 3
+
+#define SHOT_ACTION 0
+#define HOLD_ACTION 1
+#define UNKNOWN_ACTION 2
 
 #define DEFAULT_SHOT_THRESHOLD_MS 15
 #define DEFAULT_HOLD_THRESHOLD_MS 150
@@ -37,6 +42,8 @@ class ButtonEnhanced {
     onShot onShotCallback;
     onHold onHoldCallback;
 
+    uint8_t actionState;
+
     void setStartMs(const unsigned long& startMs) {
         this->startMS = startMs;
     }
@@ -47,6 +54,51 @@ class ButtonEnhanced {
 
     void setHoldNotificationLastMs(const unsigned long& holdNotificationLastMs) {
         this->holdNotificationLastMS = holdNotificationLastMs;
+    }
+
+    void setActionState(const uint8_t& actionState) {
+        this->actionState = actionState;
+    }
+
+    /**
+     * When a button is kept hold we don't want to inform the user that fast.
+     * Suppose the user decided that he want to receive the notification when a button is pressed each 500 ms.
+     * He would want that if he had a game that requires moving a object while a button is pressed.
+     * Each 500 ms he receives notification he will move the object with 1 pixel.
+     * Changing the notification delay will increase/decrease the smoothness of the movement.
+     */
+    bool isHoldNotificationTimePassed() {
+        return (millis() - this->holdNotificationLastMS) >= this->holdNotificationMS;
+    }
+
+    /**
+     * When a button is activated we do not know if there was a single fast click or it is kept hold.
+     * We must define separation between these two phases.
+     * The @param holdThresholdMS defines after what activation/pressing time the button is in hold phase.
+     */
+    bool isEnteredHold() {
+        return this->timeMS >= this->holdThresholdMS;
+    }
+
+    /**
+     * A reading can be in 3 different states.
+     * PRESSED_READING: We detected that there is a press of the provided button.
+     * INTERMEDIATE_READING: There was no release of the button since the last reading. The button is still kept pressed.
+     * RELEASED_READING: The button has been released.
+     *
+     * If the state can't be determined, then state UNKNOWN_READING: 3 is returned.
+     */
+    uint8_t getReadingState() {
+        bool buttonRead = digitalRead(this->buttonPin);
+
+        if (buttonRead && this->startMS == 0)
+            return PRESSED_READING;
+        else if (buttonRead && this->startMS > 0)
+            return INTERMEDIATE_READING;
+        else if (!buttonRead && this->startMS != 0)
+            return RELEASED_READING;
+        else
+            return UNKNOWN_READING;
     }
 
 public:
@@ -66,76 +118,43 @@ public:
         this->setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
         this->setHoldNotificationLastMs(0);
         this->setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
+        this->setActionState(UNKNOWN_ACTION);
     }
 
-    /**
-    * When a button is kept hold we don't want to inform the user that fast.
-    * Suppose the user decided that he want to receive the notification when a button is pressed each 500 ms.
-    * He would want that if he had a game that requires moving a object while a button is pressed.
-    * Each 500 ms he receives notification he will move the object with 1 pixel.
-    * Changing the notification delay will increase/decrease the smoothness of the movement.
-    */
-    bool isHoldNotificationTimePassed() {
-        return (millis() - this->holdNotificationLastMS) >= this->holdNotificationMS;
-    }
+    void refreshReading() {
+        switch (getReadingState()) {
 
-    /**
-     * When a button is activated we do not know if there was a single fast click or it is kept hold.
-     * We must define separation between these two phases.
-     * The @param holdThresholdMS defines after what activation/pressing time the button is in hold phase.
-     */
-    bool isEnteredHold() {
-        return this->timeMS >= this->holdThresholdMS;
-    }
-
-    /**
-     * A button can be in 3 different states.
-     * PRESSED: We detected that there is a press of the provided button.
-     * INTERMEDIATE: There was no release of the button since the last reading. The button is still kept pressed.
-     * RELEASED: The button has been released.
-     *
-     * If the state can't be determined, then state UNKNOWN: 3 is returned.
-     */
-    uint8_t getState() {
-        bool buttonRead = digitalRead(this->buttonPin);
-
-        if (buttonRead && this->startMS == 0)
-            return PRESSED;
-        else if (buttonRead && this->startMS > 0)
-            return INTERMEDIATE;
-        else if (!buttonRead && this->startMS != 0)
-            return RELEASED;
-        else
-            return UNKNOWN;
-    }
-
-    void checkState() {
-        switch (getState()) {
-
-            case PRESSED:
+            case PRESSED_READING:
                 this->startMS = millis();
                 break;
 
-            case INTERMEDIATE:
+            case INTERMEDIATE_READING:
                 this->timeMS = millis() - this->startMS;
 
-                if (this->onHoldCallback && this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
+                if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
                     this->holdNotificationLastMS = millis();
-                    this->onHoldCallback();
+
+                    if (this->onHoldCallback)
+                        this->onHoldCallback();
+
+                    this->setActionState(HOLD_ACTION);
                 }
 
                 break;
 
-            case RELEASED:
+            case RELEASED_READING:
                 this->timeMS = millis() - this->startMS;
 
-                if (this->onShotCallback && this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
+                if (this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
 
                     if (!this->isTotalShotsPaused) {
                         this->totalShots++;
                     }
 
-                    this->onShotCallback();
+                    if (this->onShotCallback)
+                        this->onShotCallback();
+
+                    this->setActionState(SHOT_ACTION);
                 }
 
                 if (this->timeMS >= this->holdThresholdMS && !this->isTotalHoldsPaused) {
@@ -146,9 +165,33 @@ public:
                 this->timeMS = 0;
                 break;
 
-            case UNKNOWN:
+            case UNKNOWN_READING:
                 break;
         }
+    }
+
+    bool isShot() {
+        this->refreshReading();
+        uint8_t isShot = this->actionState == SHOT_ACTION;
+
+        if (isShot) {
+            this->actionState = UNKNOWN_ACTION;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool isHold() {
+        this->refreshReading();
+        uint8_t isHold = this->actionState == HOLD_ACTION;
+
+        if (isHold) {
+            this->actionState = UNKNOWN_ACTION;
+            return true;
+        }
+
+        return false;
     }
 
     void setShotThresholdMs(const unsigned long& shotThresholdMs) {
