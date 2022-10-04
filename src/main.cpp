@@ -10,7 +10,7 @@ void onButtonShot() {
     Serial.println(buttonEnhanced.getTotalShots());
 
     if(buttonEnhanced.getTotalShots() >= 3) {
-        buttonEnhanced.pauseCallbacks();
+        buttonEnhanced.pause();
     }
 }
 

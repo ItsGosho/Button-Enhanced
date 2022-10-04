@@ -25,16 +25,22 @@ class ButtonEnhanced {
     //typedef void (* onRelease)();     //When a button is released.
 
     uint8_t buttonPin;
-    unsigned long startMS = 0;
-    unsigned long timeMS = 0;
+    unsigned long startMS;
+    unsigned long timeMS;
+    unsigned long holdNotificationLastMS;
 
-    unsigned long shotThresholdMS = 15;
-    unsigned long holdThresholdMS = 150;
-    unsigned long holdNotificationLastMS = 0;
-    unsigned long holdNotificationMS = 500;
+    struct Configuration {
+        unsigned long shotThresholdMS;
+        unsigned long holdThresholdMS;
+        unsigned long holdNotificationMS;
+    };
+
+    Configuration configuration;
 
     unsigned long totalShots;
     unsigned long totalHolds;
+
+    bool isCorePaused;
 
     bool isTotalShotsPaused;
     bool isTotalHoldsPaused;
@@ -71,7 +77,7 @@ class ButtonEnhanced {
      * Changing the notification delay will increase/decrease the smoothness of the movement.
      */
     bool isHoldNotificationTimePassed() {
-        return (millis() - this->holdNotificationLastMS) >= this->holdNotificationMS;
+        return (millis() - this->holdNotificationLastMS) >= this->configuration.holdNotificationMS;
     }
 
     /**
@@ -80,7 +86,7 @@ class ButtonEnhanced {
      * The @param holdThresholdMS defines after what activation/pressing time the button is in hold phase.
      */
     bool isEnteredHold() {
-        return this->timeMS >= this->holdThresholdMS;
+        return this->timeMS >= this->configuration.holdThresholdMS;
     }
 
     /**
@@ -109,22 +115,21 @@ public:
     ButtonEnhanced() {
     }
 
-    ButtonEnhanced(const uint8_t& buttonPin) : buttonPin(buttonPin) {
-        pinMode(buttonPin, INPUT);
-        this->setDefaults();
-    }
-
-    void setDefaults() {
+    ButtonEnhanced(const uint8_t& buttonPin, const Configuration& config = {DEFAULT_SHOT_THRESHOLD_MS, DEFAULT_HOLD_THRESHOLD_MS, DEFAULT_HOLD_NOTIFICATION_MS}) {
+        this->buttonPin = buttonPin;
+        this->configuration = config;
+        pinMode(this->buttonPin, INPUT);
         this->setStartMs(0);
         this->setTimeMs(0);
-        this->setShotThresholdMs(DEFAULT_SHOT_THRESHOLD_MS);
-        this->setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
-        this->setHoldNotificationLastMs(0);
-        this->setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
         this->setActionState(UNKNOWN_ACTION);
+        this->setHoldNotificationLastMs(0);
     }
 
     void refreshReading() {
+
+        if (this->isCorePaused)
+            return;
+
         switch (getReadingState()) {
 
             case PRESSED_READING:
@@ -148,7 +153,7 @@ public:
             case RELEASED_READING:
                 this->timeMS = millis() - this->startMS;
 
-                if (this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
+                if (this->timeMS >= this->configuration.shotThresholdMS && this->timeMS < this->configuration.holdThresholdMS) {
 
                     if (!this->isTotalShotsPaused) {
                         this->totalShots++;
@@ -160,7 +165,7 @@ public:
                     this->setActionState(SHOT_ACTION);
                 }
 
-                if (this->timeMS >= this->holdThresholdMS && !this->isTotalHoldsPaused) {
+                if (this->timeMS >= this->configuration.holdThresholdMS && !this->isTotalHoldsPaused) {
                     this->totalHolds++;
                 }
 
@@ -198,15 +203,15 @@ public:
     }
 
     void setShotThresholdMs(const unsigned long& shotThresholdMs) {
-        this->shotThresholdMS = shotThresholdMs;
+        this->configuration.shotThresholdMS = shotThresholdMs;
     }
 
     void setHoldThresholdMs(const unsigned long& holdThresholdMs) {
-        this->holdThresholdMS = holdThresholdMs;
+        this->configuration.holdThresholdMS = holdThresholdMs;
     }
 
     void setHoldNotificationMs(const unsigned long& holdNotificationMs) {
-        this->holdNotificationMS = holdNotificationMs;
+        this->configuration.holdNotificationMS = holdNotificationMs;
     }
 
     void setOnShotCallback(void (* callback)()) {
@@ -304,6 +309,30 @@ public:
 
     bool getIsHoldCallbackPaused() const {
         return this->isHoldCallbackPaused;
+    }
+
+    void pause() {
+        this->isCorePaused = true;
+    }
+
+    void resume() {
+        this->isCorePaused = false;
+    }
+
+    bool getIsCorePaused() const {
+        return this->isCorePaused;
+    }
+
+    void resetConfiguration() {
+        this->configuration = this->getDefaultConfiguration();
+    }
+
+    void updateConfiguration(const Configuration& config) {
+        this->configuration = config;
+    }
+
+    Configuration getDefaultConfiguration() {
+        return Configuration{DEFAULT_SHOT_THRESHOLD_MS, DEFAULT_HOLD_THRESHOLD_MS, DEFAULT_HOLD_NOTIFICATION_MS};
     }
 };
 
