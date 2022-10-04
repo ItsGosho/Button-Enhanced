@@ -7,10 +7,16 @@ ButtonEnhanced buttonEnhanced;
 
 void onButtonShot() {
     Serial.println("Shot!");
+    Serial.println(buttonEnhanced.getTotalShots());
+
+    if(buttonEnhanced.getTotalShots() > 3) {
+        buttonEnhanced.clearTotals();
+    }
 }
 
 void onButtonHold() {
     Serial.println("Hold!");
+    Serial.println(buttonEnhanced.getTotalHolds());
 }
 
 void setup() {
@@ -24,12 +30,4 @@ void setup() {
 void loop() {
 
     buttonEnhanced.checkState();
-
-    /* if (timeMS != 0) {
-         Serial.println(timeMS);
-
-         //TODO: I want to inform if it was single click or
-
-         timeMS = 0;
-     }*/
 }

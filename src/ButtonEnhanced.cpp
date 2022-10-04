@@ -28,6 +28,9 @@ class ButtonEnhanced {
     unsigned long holdNotificationLastMS = 0;
     unsigned long holdNotificationMS = 500;
 
+    unsigned long totalShots;
+    unsigned long totalHolds;
+
     onShot onShotCallback;
     onHold onHoldCallback;
 
@@ -114,8 +117,8 @@ public:
                 this->timeMS = millis() - this->startMS;
 
                 if (this->onHoldCallback && this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
-                    this->onHoldCallback();
                     this->holdNotificationLastMS = millis();
+                    this->onHoldCallback();
                 }
 
                 break;
@@ -124,7 +127,12 @@ public:
                 this->timeMS = millis() - this->startMS;
 
                 if (this->onShotCallback && this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
+                    this->totalShots++;
                     this->onShotCallback();
+                }
+
+                if(this->timeMS >= this->holdThresholdMS) {
+                    this->totalHolds++;
                 }
 
                 this->startMS = 0;
@@ -154,6 +162,27 @@ public:
 
     void setOnHoldCallback(void (* callback)()) {
         this->onHoldCallback = callback;
+    }
+
+    unsigned long getTotalShots() const {
+        return this->totalShots;
+    }
+
+    unsigned long getTotalHolds() const {
+        return this->totalHolds;
+    }
+
+    void clearTotalShots() {
+        this->totalShots = 0;
+    }
+
+    void clearTotalHolds() {
+        this->totalHolds = 0;
+    }
+
+    void clearTotals() {
+        this->clearTotalShots();
+        this->clearTotalHolds();
     }
 };
 
