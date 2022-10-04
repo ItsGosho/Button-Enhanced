@@ -8,6 +8,10 @@ ButtonEnhanced buttonEnhanced;
 void onButtonShot() {
     Serial.println("Shot!");
     Serial.println(buttonEnhanced.getTotalShots());
+
+    if(buttonEnhanced.getTotalShots() >= 3) {
+        buttonEnhanced.pauseCallbacks();
+    }
 }
 
 void onButtonHold() {
@@ -19,15 +23,18 @@ void setup() {
     Serial.begin(9600);
 
     buttonEnhanced = ButtonEnhanced(BUTTON_PIN);
-    //buttonEnhanced.setOnShotCallback(onButtonShot);
-    //buttonEnhanced.setOnHoldCallback(onButtonHold);
+    buttonEnhanced.setOnShotCallback(onButtonShot);
+    buttonEnhanced.setOnHoldCallback(onButtonHold);
 }
 
 void loop() {
 
-    //buttonEnhanced.refreshReading();
+    buttonEnhanced.refreshReading();
 
-    if (buttonEnhanced.isShot()) {
+    if(buttonEnhanced.getTotalShots() >= 5)
+        buttonEnhanced.resumeCallbacks();
+
+  /*  if (buttonEnhanced.isShot()) {
         Serial.println("Shot!");
         Serial.println(buttonEnhanced.getTotalShots());
     }
@@ -35,5 +42,5 @@ void loop() {
     if (buttonEnhanced.isHold()) {
         Serial.println("Hold!");
         Serial.println(buttonEnhanced.getTotalHolds());
-    }
+    }*/
 }

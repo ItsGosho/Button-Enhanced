@@ -39,6 +39,9 @@ class ButtonEnhanced {
     bool isTotalShotsPaused;
     bool isTotalHoldsPaused;
 
+    bool isShotCallbackPaused;
+    bool isHoldCallbackPaused;
+
     onShot onShotCallback;
     onHold onHoldCallback;
 
@@ -134,7 +137,7 @@ public:
                 if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
                     this->holdNotificationLastMS = millis();
 
-                    if (this->onHoldCallback)
+                    if (this->onHoldCallback && !this->isHoldCallbackPaused)
                         this->onHoldCallback();
 
                     this->setActionState(HOLD_ACTION);
@@ -151,7 +154,7 @@ public:
                         this->totalShots++;
                     }
 
-                    if (this->onShotCallback)
+                    if (this->onShotCallback && !this->isShotCallbackPaused)
                         this->onShotCallback();
 
                     this->setActionState(SHOT_ACTION);
@@ -267,6 +270,40 @@ public:
 
     bool getIsTotalHoldsPaused() const {
         return this->isTotalHoldsPaused;
+    }
+
+    void pauseShotCallback() {
+        this->isShotCallbackPaused = true;
+    }
+
+    void pauseHoldCallback() {
+        this->isHoldCallbackPaused = true;
+    }
+
+    void resumeShotCallback() {
+        this->isShotCallbackPaused = false;
+    }
+
+    void resumeHoldCallback() {
+        this->isHoldCallbackPaused = false;
+    }
+
+    void pauseCallbacks() {
+        this->pauseShotCallback();
+        this->pauseHoldCallback();
+    }
+
+    void resumeCallbacks() {
+        this->resumeShotCallback();
+        this->resumeHoldCallback();
+    }
+
+    bool getIsShotCallbackPaused() const {
+        return this->isShotCallbackPaused;
+    }
+
+    bool getIsHoldCallbackPaused() const {
+        return this->isHoldCallbackPaused;
     }
 };
 
