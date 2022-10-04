@@ -200,12 +200,22 @@ public:
         this->isTotalHoldsPaused = true;
     }
 
+    void pauseTotals() {
+        this->pauseTotalShotsCounting();
+        this->pauseTotalHoldsCounting();
+    }
+
     void resumeTotalShotsCounting() {
         this->isTotalShotsPaused = false;
     }
 
     void resumeTotalHoldsCounting() {
         this->isTotalHoldsPaused = false;
+    }
+
+    void resumeTotals() {
+        this->resumeTotalShotsCounting();
+        this->resumeTotalHoldsCounting();
     }
 
     bool getIsTotalShotsPaused() const {
