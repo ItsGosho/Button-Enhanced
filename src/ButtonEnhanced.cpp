@@ -1,339 +1,261 @@
-#ifndef ITSGOSHO_BUTTON_ENHANCED_H
-#define ITSGOSHO_BUTTON_ENHANCED_H
+#include "ButtonEnhanced.h"
 
-#include <Arduino.h>
-#include <cstdint>
+ButtonEnhanced::ButtonEnhanced() {
+}
 
-#define PRESSED_READING 0
-#define INTERMEDIATE_READING 1
-#define RELEASED_READING 2
-#define UNKNOWN_READING 3
+ButtonEnhanced::ButtonEnhanced(const uint8_t& buttonPin, const Configuration& config) {
+    this->buttonPin = buttonPin;
+    this->configuration = config;
+    pinMode(this->buttonPin, INPUT);
+    this->setStartMs(0);
+    this->setTimeMs(0);
+    this->setActionState(UNKNOWN_ACTION);
+    this->setHoldNotificationLastMs(0);
+}
 
-#define SHOT_ACTION 0
-#define HOLD_ACTION 1
-#define UNKNOWN_ACTION 2
+void ButtonEnhanced::setStartMs(const unsigned long& startMs) {
+    this->startMS = startMs;
+}
 
-#define DEFAULT_SHOT_THRESHOLD_MS 15
-#define DEFAULT_HOLD_THRESHOLD_MS 150
-#define DEFAULT_HOLD_NOTIFICATION_MS 500
+void ButtonEnhanced::setTimeMs(const unsigned long& timeMs) {
+    this->timeMS = timeMs;
+}
 
-class ButtonEnhanced {
+void ButtonEnhanced::setHoldNotificationLastMs(const unsigned long& holdNotificationLastMs) {
+    this->holdNotificationLastMS = holdNotificationLastMs;
+}
 
-    typedef void (* onShot)();        //When a button is pressed and released immediately
-    //typedef void (* onPress)();       //When a button is pressed.
-    typedef void (* onHold)();        //When a button is kept pressed.
-    //typedef void (* onRelease)();     //When a button is released.
+void ButtonEnhanced::setActionState(const uint8_t& actionState) {
+    this->actionState = actionState;
+}
 
-    uint8_t buttonPin;
-    unsigned long startMS;
-    unsigned long timeMS;
-    unsigned long holdNotificationLastMS;
+bool ButtonEnhanced::isHoldNotificationTimePassed() {
+    return (millis() - this->holdNotificationLastMS) >= this->configuration.holdNotificationMS;
+}
 
-    struct Configuration {
-        unsigned long shotThresholdMS;
-        unsigned long holdThresholdMS;
-        unsigned long holdNotificationMS;
-    };
+bool ButtonEnhanced::isEnteredHold() {
+    return this->timeMS >= this->configuration.holdThresholdMS;
+}
 
-    Configuration configuration;
+uint8_t ButtonEnhanced::getReadingState() {
+    bool buttonRead = digitalRead(this->buttonPin);
 
-    unsigned long totalShots;
-    unsigned long totalHolds;
+    if (buttonRead && this->startMS == 0)
+        return PRESSED_READING;
+    else if (buttonRead && this->startMS > 0)
+        return INTERMEDIATE_READING;
+    else if (!buttonRead && this->startMS != 0)
+        return RELEASED_READING;
+    else
+        return UNKNOWN_READING;
+}
 
-    bool isCorePaused;
+void ButtonEnhanced::refreshReading() {
 
-    bool isTotalShotsPaused;
-    bool isTotalHoldsPaused;
+    if (this->isCorePaused)
+        return;
 
-    bool isShotCallbackPaused;
-    bool isHoldCallbackPaused;
+    switch (getReadingState()) {
 
-    onShot onShotCallback;
-    onHold onHoldCallback;
+        case PRESSED_READING:
+            this->startMS = millis();
+            break;
 
-    uint8_t actionState;
+        case INTERMEDIATE_READING:
+            this->timeMS = millis() - this->startMS;
 
-    void setStartMs(const unsigned long& startMs) {
-        this->startMS = startMs;
-    }
+            if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
+                this->holdNotificationLastMS = millis();
 
-    void setTimeMs(const unsigned long& timeMs) {
-        this->timeMS = timeMs;
-    }
+                if (this->onHoldCallback && !this->isHoldCallbackPaused)
+                    this->onHoldCallback();
 
-    void setHoldNotificationLastMs(const unsigned long& holdNotificationLastMs) {
-        this->holdNotificationLastMS = holdNotificationLastMs;
-    }
+                this->setActionState(HOLD_ACTION);
+            }
 
-    void setActionState(const uint8_t& actionState) {
-        this->actionState = actionState;
-    }
+            break;
 
-    /**
-     * When a button is kept hold we don't want to inform the user that fast.
-     * Suppose the user decided that he want to receive the notification when a button is pressed each 500 ms.
-     * He would want that if he had a game that requires moving a object while a button is pressed.
-     * Each 500 ms he receives notification he will move the object with 1 pixel.
-     * Changing the notification delay will increase/decrease the smoothness of the movement.
-     */
-    bool isHoldNotificationTimePassed() {
-        return (millis() - this->holdNotificationLastMS) >= this->configuration.holdNotificationMS;
-    }
+        case RELEASED_READING:
+            this->timeMS = millis() - this->startMS;
 
-    /**
-     * When a button is activated we do not know if there was a single fast click or it is kept hold.
-     * We must define separation between these two phases.
-     * The @param holdThresholdMS defines after what activation/pressing time the button is in hold phase.
-     */
-    bool isEnteredHold() {
-        return this->timeMS >= this->configuration.holdThresholdMS;
-    }
+            if (this->timeMS >= this->configuration.shotThresholdMS && this->timeMS < this->configuration.holdThresholdMS) {
 
-    /**
-     * A reading can be in 3 different states.
-     * PRESSED_READING: We detected that there is a press of the provided button.
-     * INTERMEDIATE_READING: There was no release of the button since the last reading. The button is still kept pressed.
-     * RELEASED_READING: The button has been released.
-     *
-     * If the state can't be determined, then state UNKNOWN_READING: 3 is returned.
-     */
-    uint8_t getReadingState() {
-        bool buttonRead = digitalRead(this->buttonPin);
-
-        if (buttonRead && this->startMS == 0)
-            return PRESSED_READING;
-        else if (buttonRead && this->startMS > 0)
-            return INTERMEDIATE_READING;
-        else if (!buttonRead && this->startMS != 0)
-            return RELEASED_READING;
-        else
-            return UNKNOWN_READING;
-    }
-
-public:
-
-    ButtonEnhanced() {
-    }
-
-    ButtonEnhanced(const uint8_t& buttonPin, const Configuration& config = {DEFAULT_SHOT_THRESHOLD_MS, DEFAULT_HOLD_THRESHOLD_MS, DEFAULT_HOLD_NOTIFICATION_MS}) {
-        this->buttonPin = buttonPin;
-        this->configuration = config;
-        pinMode(this->buttonPin, INPUT);
-        this->setStartMs(0);
-        this->setTimeMs(0);
-        this->setActionState(UNKNOWN_ACTION);
-        this->setHoldNotificationLastMs(0);
-    }
-
-    void refreshReading() {
-
-        if (this->isCorePaused)
-            return;
-
-        switch (getReadingState()) {
-
-            case PRESSED_READING:
-                this->startMS = millis();
-                break;
-
-            case INTERMEDIATE_READING:
-                this->timeMS = millis() - this->startMS;
-
-                if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
-                    this->holdNotificationLastMS = millis();
-
-                    if (this->onHoldCallback && !this->isHoldCallbackPaused)
-                        this->onHoldCallback();
-
-                    this->setActionState(HOLD_ACTION);
+                if (!this->isTotalShotsPaused) {
+                    this->totalShots++;
                 }
 
-                break;
+                if (this->onShotCallback && !this->isShotCallbackPaused)
+                    this->onShotCallback();
 
-            case RELEASED_READING:
-                this->timeMS = millis() - this->startMS;
+                this->setActionState(SHOT_ACTION);
+            }
 
-                if (this->timeMS >= this->configuration.shotThresholdMS && this->timeMS < this->configuration.holdThresholdMS) {
+            if (this->timeMS >= this->configuration.holdThresholdMS && !this->isTotalHoldsPaused) {
+                this->totalHolds++;
+            }
 
-                    if (!this->isTotalShotsPaused) {
-                        this->totalShots++;
-                    }
+            this->startMS = 0;
+            this->timeMS = 0;
+            break;
 
-                    if (this->onShotCallback && !this->isShotCallbackPaused)
-                        this->onShotCallback();
+        case UNKNOWN_READING:
+            break;
+    }
+}
 
-                    this->setActionState(SHOT_ACTION);
-                }
+bool ButtonEnhanced::isShot() {
+    this->refreshReading();
+    uint8_t isShot = this->actionState == SHOT_ACTION;
 
-                if (this->timeMS >= this->configuration.holdThresholdMS && !this->isTotalHoldsPaused) {
-                    this->totalHolds++;
-                }
-
-                this->startMS = 0;
-                this->timeMS = 0;
-                break;
-
-            case UNKNOWN_READING:
-                break;
-        }
+    if (isShot) {
+        this->actionState = UNKNOWN_ACTION;
+        return true;
     }
 
-    bool isShot() {
-        this->refreshReading();
-        uint8_t isShot = this->actionState == SHOT_ACTION;
+    return false;
+}
 
-        if (isShot) {
-            this->actionState = UNKNOWN_ACTION;
-            return true;
-        }
+bool ButtonEnhanced::isHold() {
+    this->refreshReading();
+    uint8_t isHold = this->actionState == HOLD_ACTION;
 
-        return false;
+    if (isHold) {
+        this->actionState = UNKNOWN_ACTION;
+        return true;
     }
 
-    bool isHold() {
-        this->refreshReading();
-        uint8_t isHold = this->actionState == HOLD_ACTION;
+    return false;
+}
 
-        if (isHold) {
-            this->actionState = UNKNOWN_ACTION;
-            return true;
-        }
+void ButtonEnhanced::setShotThresholdMs(const unsigned long& shotThresholdMs) {
+    this->configuration.shotThresholdMS = shotThresholdMs;
+}
 
-        return false;
-    }
+void ButtonEnhanced::setHoldThresholdMs(const unsigned long& holdThresholdMs) {
+    this->configuration.holdThresholdMS = holdThresholdMs;
+}
 
-    void setShotThresholdMs(const unsigned long& shotThresholdMs) {
-        this->configuration.shotThresholdMS = shotThresholdMs;
-    }
+void ButtonEnhanced::setHoldNotificationMs(const unsigned long& holdNotificationMs) {
+    this->configuration.holdNotificationMS = holdNotificationMs;
+}
 
-    void setHoldThresholdMs(const unsigned long& holdThresholdMs) {
-        this->configuration.holdThresholdMS = holdThresholdMs;
-    }
+void ButtonEnhanced::setOnShotCallback(void (* callback)()) {
+    this->onShotCallback = callback;
+}
 
-    void setHoldNotificationMs(const unsigned long& holdNotificationMs) {
-        this->configuration.holdNotificationMS = holdNotificationMs;
-    }
+void ButtonEnhanced::setOnHoldCallback(void (* callback)()) {
+    this->onHoldCallback = callback;
+}
 
-    void setOnShotCallback(void (* callback)()) {
-        this->onShotCallback = callback;
-    }
+unsigned long ButtonEnhanced::getTotalShots() const {
+    return this->totalShots;
+}
 
-    void setOnHoldCallback(void (* callback)()) {
-        this->onHoldCallback = callback;
-    }
+unsigned long ButtonEnhanced::getTotalHolds() const {
+    return this->totalHolds;
+}
 
-    unsigned long getTotalShots() const {
-        return this->totalShots;
-    }
+void ButtonEnhanced::clearTotalShots() {
+    this->totalShots = 0;
+}
 
-    unsigned long getTotalHolds() const {
-        return this->totalHolds;
-    }
+void ButtonEnhanced::clearTotalHolds() {
+    this->totalHolds = 0;
+}
 
-    void clearTotalShots() {
-        this->totalShots = 0;
-    }
+void ButtonEnhanced::clearTotalsCounting() {
+    this->clearTotalShots();
+    this->clearTotalHolds();
+}
 
-    void clearTotalHolds() {
-        this->totalHolds = 0;
-    }
+void ButtonEnhanced::pauseTotalShotsCounting() {
+    this->isTotalShotsPaused = true;
+}
 
-    void clearTotalsCounting() {
-        this->clearTotalShots();
-        this->clearTotalHolds();
-    }
+void ButtonEnhanced::pauseTotalHoldsCounting() {
+    this->isTotalHoldsPaused = true;
+}
 
-    void pauseTotalShotsCounting() {
-        this->isTotalShotsPaused = true;
-    }
+void ButtonEnhanced::pauseTotalsCounting() {
+    this->pauseTotalShotsCounting();
+    this->pauseTotalHoldsCounting();
+}
 
-    void pauseTotalHoldsCounting() {
-        this->isTotalHoldsPaused = true;
-    }
+void ButtonEnhanced::resumeTotalShotsCounting() {
+    this->isTotalShotsPaused = false;
+}
 
-    void pauseTotalsCounting() {
-        this->pauseTotalShotsCounting();
-        this->pauseTotalHoldsCounting();
-    }
+void ButtonEnhanced::resumeTotalHoldsCounting() {
+    this->isTotalHoldsPaused = false;
+}
 
-    void resumeTotalShotsCounting() {
-        this->isTotalShotsPaused = false;
-    }
+void ButtonEnhanced::resumeTotalsCounting() {
+    this->resumeTotalShotsCounting();
+    this->resumeTotalHoldsCounting();
+}
 
-    void resumeTotalHoldsCounting() {
-        this->isTotalHoldsPaused = false;
-    }
+bool ButtonEnhanced::getIsTotalShotsPaused() const {
+    return this->isTotalShotsPaused;
+}
 
-    void resumeTotalsCounting() {
-        this->resumeTotalShotsCounting();
-        this->resumeTotalHoldsCounting();
-    }
+bool ButtonEnhanced::getIsTotalHoldsPaused() const {
+    return this->isTotalHoldsPaused;
+}
 
-    bool getIsTotalShotsPaused() const {
-        return this->isTotalShotsPaused;
-    }
+void ButtonEnhanced::pauseShotCallback() {
+    this->isShotCallbackPaused = true;
+}
 
-    bool getIsTotalHoldsPaused() const {
-        return this->isTotalHoldsPaused;
-    }
+void ButtonEnhanced::pauseHoldCallback() {
+    this->isHoldCallbackPaused = true;
+}
 
-    void pauseShotCallback() {
-        this->isShotCallbackPaused = true;
-    }
+void ButtonEnhanced::resumeShotCallback() {
+    this->isShotCallbackPaused = false;
+}
 
-    void pauseHoldCallback() {
-        this->isHoldCallbackPaused = true;
-    }
+void ButtonEnhanced::resumeHoldCallback() {
+    this->isHoldCallbackPaused = false;
+}
 
-    void resumeShotCallback() {
-        this->isShotCallbackPaused = false;
-    }
+void ButtonEnhanced::pauseCallbacks() {
+    this->pauseShotCallback();
+    this->pauseHoldCallback();
+}
 
-    void resumeHoldCallback() {
-        this->isHoldCallbackPaused = false;
-    }
+void ButtonEnhanced::resumeCallbacks() {
+    this->resumeShotCallback();
+    this->resumeHoldCallback();
+}
 
-    void pauseCallbacks() {
-        this->pauseShotCallback();
-        this->pauseHoldCallback();
-    }
+bool ButtonEnhanced::getIsShotCallbackPaused() const {
+    return this->isShotCallbackPaused;
+}
 
-    void resumeCallbacks() {
-        this->resumeShotCallback();
-        this->resumeHoldCallback();
-    }
+bool ButtonEnhanced::getIsHoldCallbackPaused() const {
+    return this->isHoldCallbackPaused;
+}
 
-    bool getIsShotCallbackPaused() const {
-        return this->isShotCallbackPaused;
-    }
+void ButtonEnhanced::pause() {
+    this->isCorePaused = true;
+}
 
-    bool getIsHoldCallbackPaused() const {
-        return this->isHoldCallbackPaused;
-    }
+void ButtonEnhanced::resume() {
+    this->isCorePaused = false;
+}
 
-    void pause() {
-        this->isCorePaused = true;
-    }
+bool ButtonEnhanced::getIsCorePaused() const {
+    return this->isCorePaused;
+}
 
-    void resume() {
-        this->isCorePaused = false;
-    }
+void ButtonEnhanced::resetConfiguration() {
+    this->configuration = this->getDefaultConfiguration();
+}
 
-    bool getIsCorePaused() const {
-        return this->isCorePaused;
-    }
+void ButtonEnhanced::updateConfiguration(const Configuration& config) {
+    this->configuration = config;
+}
 
-    void resetConfiguration() {
-        this->configuration = this->getDefaultConfiguration();
-    }
-
-    void updateConfiguration(const Configuration& config) {
-        this->configuration = config;
-    }
-
-    Configuration getDefaultConfiguration() {
-        return Configuration{DEFAULT_SHOT_THRESHOLD_MS, DEFAULT_HOLD_THRESHOLD_MS, DEFAULT_HOLD_NOTIFICATION_MS};
-    }
-};
-
-#endif //ITSGOSHO_BUTTON_ENHANCED_H
+ButtonEnhanced::Configuration ButtonEnhanced::getDefaultConfiguration() {
+    return Configuration{DEFAULT_SHOT_THRESHOLD_MS, DEFAULT_HOLD_THRESHOLD_MS, DEFAULT_HOLD_NOTIFICATION_MS};
+}
