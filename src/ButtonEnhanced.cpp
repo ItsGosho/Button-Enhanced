@@ -31,6 +31,9 @@ class ButtonEnhanced {
     unsigned long totalShots;
     unsigned long totalHolds;
 
+    bool isTotalShotsPaused;
+    bool isTotalHoldsPaused;
+
     onShot onShotCallback;
     onHold onHoldCallback;
 
@@ -127,11 +130,15 @@ public:
                 this->timeMS = millis() - this->startMS;
 
                 if (this->onShotCallback && this->timeMS >= this->shotThresholdMS && this->timeMS < this->holdThresholdMS) {
-                    this->totalShots++;
+
+                    if (!this->isTotalShotsPaused) {
+                        this->totalShots++;
+                    }
+
                     this->onShotCallback();
                 }
 
-                if(this->timeMS >= this->holdThresholdMS) {
+                if (this->timeMS >= this->holdThresholdMS && !this->isTotalHoldsPaused) {
                     this->totalHolds++;
                 }
 
@@ -183,6 +190,30 @@ public:
     void clearTotals() {
         this->clearTotalShots();
         this->clearTotalHolds();
+    }
+
+    void pauseTotalShotsCounting() {
+        this->isTotalShotsPaused = true;
+    }
+
+    void pauseTotalHoldsCounting() {
+        this->isTotalHoldsPaused = true;
+    }
+
+    void resumeTotalShotsCounting() {
+        this->isTotalShotsPaused = false;
+    }
+
+    void resumeTotalHoldsCounting() {
+        this->isTotalHoldsPaused = false;
+    }
+
+    bool getIsTotalShotsPaused() const {
+        return this->isTotalShotsPaused;
+    }
+
+    bool getIsTotalHoldsPaused() const {
+        return this->isTotalHoldsPaused;
     }
 };
 

@@ -9,14 +9,18 @@ void onButtonShot() {
     Serial.println("Shot!");
     Serial.println(buttonEnhanced.getTotalShots());
 
-    if(buttonEnhanced.getTotalShots() > 3) {
-        buttonEnhanced.clearTotals();
+    if(buttonEnhanced.getTotalShots() >= 3) {
+        buttonEnhanced.pauseTotalShotsCounting();
     }
 }
 
 void onButtonHold() {
     Serial.println("Hold!");
     Serial.println(buttonEnhanced.getTotalHolds());
+
+    if(buttonEnhanced.getTotalHolds() >= 2) {
+        buttonEnhanced.resumeTotalShotsCounting();
+    }
 }
 
 void setup() {
