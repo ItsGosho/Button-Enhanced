@@ -104,19 +104,30 @@ void loop() {
 - There are **3 core parameters** that can be set upon **ButtonEnhanced**  initialization or dynamically later in your program:
 
 ```c++
-//Preparing the configuration
-ButtonEnhanced::Configuration configuration = ButtonEnhanced::Configuration();
-configuration.shotThresholdMS = DEFAULT_SHOT_THRESHOLD_MS;
-configuration.holdThresholdMS = DEFAULT_HOLD_THRESHOLD_MS;
-configuration.holdNotificationMS = DEFAULT_HOLD_NOTIFICATION_MS;
+    //Preparing the configuration
+    ButtonEnhanced::Configuration configuration = ButtonEnhanced::Configuration();
+    configuration.shotThresholdMS = DEFAULT_SHOT_THRESHOLD_MS;
+    configuration.holdThresholdMS = DEFAULT_HOLD_THRESHOLD_MS;
+    configuration.holdNotificationMS = DEFAULT_HOLD_NOTIFICATION_MS;
 
-//During initialization. If not provided configuration, the default one is used.
-buttonEnhanced = ButtonEnhanced(BUTTON_PIN, configuration);
+    //During initialization. If not provided configuration, the default one is used.
+    buttonEnhanced = ButtonEnhanced(BUTTON_PIN);
 
-//Dynamically, overwriting the existing one.
-buttonEnhanced.setShotThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
-buttonEnhanced.setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
-buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
+    //Dynamically, overwriting a piece of the existing one
+    buttonEnhanced.setShotThresholdMs(DEFAULT_SHOT_THRESHOLD_MS);
+    buttonEnhanced.setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
+    buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
+
+    //Dynamically, overwriting it at once
+    ButtonEnhanced::Configuration anotherConfiguration = ButtonEnhanced::Configuration();
+    anotherConfiguration.shotThresholdMS = DEFAULT_SHOT_THRESHOLD_MS;
+    anotherConfiguration.holdThresholdMS = DEFAULT_HOLD_THRESHOLD_MS;
+    anotherConfiguration.holdNotificationMS = DEFAULT_HOLD_NOTIFICATION_MS;
+    
+    buttonEnhanced.updateConfiguration(anotherConfiguration);
+    
+    //Resetting the configuration to the default one
+    buttonEnhanced.resetConfiguration();
 ```
 
 
@@ -151,9 +162,15 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 
 ## Other Functionalities:
 
+- **pause()** - That will pause the callbacks, counting, checking button readings and etc...
+- **resume()** - That will resume the callbacks, counting, checking button readings and etc...
 
-
-
+- **clearTotalShots()**, **clearTotalHolds()**, **clearTotals()** - Clear a specific total counting or all at once.
+- **pauseTotalShotsCounting()**, **pauseTotalHoldsCounting()**, **pauseTotalsCounting()** - Pause a specific total counting or all at once
+- **resumeTotalShotsCounting()**, **resumeTotalHoldsCounting()**, **resumeTotalsCounting()** - Resume a specific total counting or all at once
+- **resumeShotCallback()**,  **resumeHoldCallback()**, **resumeCallbacks()** - Resume a specific callbacks or all at once
+- **pauseShotCallback()**,  **pauseHoldCallback()**, **pauseCallbacks()** - Resume a specific callbacks or all at once
+- **getIsCorePaused()**, **getIsTotalHoldsPaused()**,  **getIsTotalShotsPaused()**,  **getTotalHolds()**, **getTotalShots()** - Retrieve information about different things in the library.
 
 
 
@@ -162,9 +179,7 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - The library was written with the idea to be used in [another project](https://github.com/ItsGosho/Pong-Pong).
 - While writing the library, most of the ideas and concepts were drawn in [Excalidraw](https://excalidraw.com/) ,which is a sketching tool. You can find the latest sketches in the [excali](https://github.com/ItsGosho/Button-Enhanced/tree/dev/excali) folder.
 
-
 <img src="pics\image-20221005040945841.png" alt="image-20221005040945841" style="zoom:50%;" />
-
 
 
 

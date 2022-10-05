@@ -17,13 +17,26 @@ void setup() {
     //During initialization. If not provided configuration, the default one is used.
     buttonEnhanced = ButtonEnhanced(BUTTON_PIN);
 
-    //Dynamically, overwriting the existing one.
+    //Dynamically, overwriting a piece of the existing one
     buttonEnhanced.setShotThresholdMs(DEFAULT_SHOT_THRESHOLD_MS);
     buttonEnhanced.setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
     buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
+
+    //Dynamically, overwriting it at once
+    ButtonEnhanced::Configuration anotherConfiguration = ButtonEnhanced::Configuration();
+    anotherConfiguration.shotThresholdMS = DEFAULT_SHOT_THRESHOLD_MS;
+    anotherConfiguration.holdThresholdMS = DEFAULT_HOLD_THRESHOLD_MS;
+    anotherConfiguration.holdNotificationMS = DEFAULT_HOLD_NOTIFICATION_MS;
+
+    buttonEnhanced.updateConfiguration(anotherConfiguration);
+
+    //Resetting the configuration to the default one
+    buttonEnhanced.resetConfiguration();
 }
 
 void loop() {
+
+    buttonEnhanced.resumeHoldCallback()
 
     if (buttonEnhanced.isShot()) {
         Serial.println("Button press detected!");
