@@ -126,7 +126,8 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - Set minimal amount of time in milliseconds that the button must be in pressed state to be counted as single press (shot).
 - The **default** time is **15 milliseconds**
 
-![image-20221005033245540](pics\image-20221005033245540.png)
+<img src="pics\image-20221005033245540.png" alt="image-20221005033245540" style="zoom:50%;" />
+
 
 
 
@@ -135,7 +136,7 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - Set minimal amount of time in milliseconds that the button must be in pressed state to be counted as hold.
 - The **default** time is **200 milliseconds**
 
-![image-20221005034011271](pics\image-20221005034011271.png)
+<img src="pics\image-20221005034011271.png" alt="image-20221005034011271" style="zoom:50%;" />
 
 
 
@@ -144,7 +145,7 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - Set minimal amount of interval time in milliseconds that the notification for hold is called
 - The **default** time is **500 milliseconds**
 
-![image-20221005034612276](pics\image-20221005034612276.png)
+<img src="pics\image-20221005034612276.png" alt="image-20221005034612276" style="zoom:50%;" />
 
 
 
