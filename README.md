@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/github/v/release/ItsGosho/Button-Enhanced?include_prereleases)](https://github.com/ItsGosho/Button-Enhanced/blob/main/LICENSE)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/ItsGosho/library/ButtonEnhanced.svg)](https://registry.platformio.org/libraries/ItsGosho/ButtonEnhanced)
 
-<img src=".\pics\image-20221004213143380.png" alt="image-20221004213143380" style="zoom:50%;" />
+<img src="pics\image-20221004213143380.png" alt="image-20221004213143380" style="zoom:50%;" />
 
 ## Functionalities:
 
@@ -126,7 +126,7 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - Set minimal amount of time in milliseconds that the button must be in pressed state to be counted as single press (shot).
 - The **default** time is **15 milliseconds**
 
-![image-20221005033245540](.\pics\image-20221005033245540.png)
+![image-20221005033245540](pics\image-20221005033245540.png)
 
 
 
@@ -135,7 +135,7 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - Set minimal amount of time in milliseconds that the button must be in pressed state to be counted as hold.
 - The **default** time is **200 milliseconds**
 
-![image-20221005034011271](.\pics\image-20221005034011271.png)
+![image-20221005034011271](pics\image-20221005034011271.png)
 
 
 
@@ -144,7 +144,7 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 - Set minimal amount of interval time in milliseconds that the notification for hold is called
 - The **default** time is **500 milliseconds**
 
-![image-20221005034612276](.\pics\image-20221005034612276.png)
+![image-20221005034612276](pics\image-20221005034612276.png)
 
 
 
