@@ -29,12 +29,6 @@ class ButtonEnhanced {
     unsigned long timeMS;
     unsigned long holdNotificationLastMS;
 
-    struct Configuration {
-        unsigned long shotThresholdMS;
-        unsigned long holdThresholdMS;
-        unsigned long holdNotificationMS;
-    };
-
     Configuration configuration;
 
     unsigned long totalShots;
@@ -88,6 +82,12 @@ class ButtonEnhanced {
     uint8_t getReadingState();
 
 public:
+
+    struct Configuration {
+        unsigned long shotThresholdMS;
+        unsigned long holdThresholdMS;
+        unsigned long holdNotificationMS;
+    };
 
     ButtonEnhanced();
 
@@ -162,6 +162,8 @@ public:
     void updateConfiguration(const Configuration& config);
 
     Configuration getDefaultConfiguration();
+
+    void changePin(const uint8_t& buttonPin);
 };
 
 #endif //ITSGOSHO_BUTTON_ENHANCED_H

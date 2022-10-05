@@ -259,3 +259,8 @@ void ButtonEnhanced::updateConfiguration(const Configuration& config) {
 ButtonEnhanced::Configuration ButtonEnhanced::getDefaultConfiguration() {
     return Configuration{DEFAULT_SHOT_THRESHOLD_MS, DEFAULT_HOLD_THRESHOLD_MS, DEFAULT_HOLD_NOTIFICATION_MS};
 }
+
+void ButtonEnhanced::changePin(const uint8_t& buttonPin) {
+    pinMode(buttonPin, INPUT);
+    this->buttonPin = buttonPin;
+}
