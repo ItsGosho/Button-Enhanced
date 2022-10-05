@@ -15,10 +15,10 @@ void setup() {
     configuration.holdNotificationMS = DEFAULT_HOLD_NOTIFICATION_MS;
 
     //During initialization. If not provided configuration, the default one is used.
-    buttonEnhanced = ButtonEnhanced(BUTTON_PIN, configuration);
+    buttonEnhanced = ButtonEnhanced(BUTTON_PIN);
 
     //Dynamically, overwriting the existing one.
-    buttonEnhanced.setShotThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
+    buttonEnhanced.setShotThresholdMs(DEFAULT_SHOT_THRESHOLD_MS);
     buttonEnhanced.setHoldThresholdMs(DEFAULT_HOLD_THRESHOLD_MS);
     buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 }

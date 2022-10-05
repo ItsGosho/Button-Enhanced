@@ -50,6 +50,46 @@ uint8_t ButtonEnhanced::getReadingState() {
         return UNKNOWN_READING;
 }
 
+void ButtonEnhanced::processPressedReading() {
+    this->startMS = millis();
+}
+
+void ButtonEnhanced::processIntermediateReading() {
+    this->timeMS = millis() - this->startMS;
+
+    if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
+        this->holdNotificationLastMS = millis();
+
+        if (this->onHoldCallback && !this->isHoldCallbackPaused)
+            this->onHoldCallback();
+
+        this->setActionState(HOLD_ACTION);
+    }
+}
+
+void ButtonEnhanced::processReleasedReading() {
+    this->timeMS = millis() - this->startMS;
+
+    if (this->timeMS >= this->configuration.shotThresholdMS && this->timeMS < this->configuration.holdThresholdMS) {
+
+        if (!this->isTotalShotsPaused) {
+            this->totalShots++;
+        }
+
+        if (this->onShotCallback && !this->isShotCallbackPaused)
+            this->onShotCallback();
+
+        this->setActionState(SHOT_ACTION);
+    }
+
+    if (this->timeMS >= this->configuration.holdThresholdMS && !this->isTotalHoldsPaused) {
+        this->totalHolds++;
+    }
+
+    this->startMS = 0;
+    this->timeMS = 0;
+}
+
 void ButtonEnhanced::refreshReading() {
 
     if (this->isCorePaused)
@@ -58,44 +98,15 @@ void ButtonEnhanced::refreshReading() {
     switch (getReadingState()) {
 
         case PRESSED_READING:
-            this->startMS = millis();
+            this->processPressedReading();
             break;
 
         case INTERMEDIATE_READING:
-            this->timeMS = millis() - this->startMS;
-
-            if (this->isEnteredHold() && this->isHoldNotificationTimePassed()) {
-                this->holdNotificationLastMS = millis();
-
-                if (this->onHoldCallback && !this->isHoldCallbackPaused)
-                    this->onHoldCallback();
-
-                this->setActionState(HOLD_ACTION);
-            }
-
+            this->processIntermediateReading();
             break;
 
         case RELEASED_READING:
-            this->timeMS = millis() - this->startMS;
-
-            if (this->timeMS >= this->configuration.shotThresholdMS && this->timeMS < this->configuration.holdThresholdMS) {
-
-                if (!this->isTotalShotsPaused) {
-                    this->totalShots++;
-                }
-
-                if (this->onShotCallback && !this->isShotCallbackPaused)
-                    this->onShotCallback();
-
-                this->setActionState(SHOT_ACTION);
-            }
-
-            if (this->timeMS >= this->configuration.holdThresholdMS && !this->isTotalHoldsPaused) {
-                this->totalHolds++;
-            }
-
-            this->startMS = 0;
-            this->timeMS = 0;
+            this->processReleasedReading();
             break;
 
         case UNKNOWN_READING:

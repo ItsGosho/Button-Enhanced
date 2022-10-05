@@ -149,3 +149,24 @@ buttonEnhanced.setHoldNotificationMs(DEFAULT_HOLD_NOTIFICATION_MS);
 
 
 
+## Other Functionalities:
+
+
+
+
+
+
+
+## Additional Information:
+
+- The library was written with the idea to be used in [another project](https://github.com/ItsGosho/Pong-Pong).
+- While writing the library, most of the ideas and concepts were drawn in [Excalidraw](https://excalidraw.com/) ,which is a sketching tool. You can find the latest sketches in the [excali](https://github.com/ItsGosho/Button-Enhanced/tree/dev/excali) folder.
+
+
+<img src="pics\image-20221005040945841.png" alt="image-20221005040945841" style="zoom:50%;" />
+
+
+
+
+
+
