@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "ButtonEnhanced.h"
 
+using namespace itsgosho;
+
 #define BUTTON_PIN 22
 
 ButtonEnhanced buttonEnhanced;
