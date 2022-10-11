@@ -1,7 +1,6 @@
 # Button-Enhanced
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ItsGosho/Button-Enhanced/blob/main/LICENSE)
 [![Version](https://img.shields.io/github/v/release/ItsGosho/Button-Enhanced?include_prereleases)](https://github.com/ItsGosho/Button-Enhanced/blob/main/LICENSE)
-[![PlatformIO Registry](https://badges.registry.platformio.org/packages/ItsGosho/library/ButtonEnhanced.svg)](https://registry.platformio.org/libraries/ItsGosho/ButtonEnhanced)
 
 <img src="pics\image-20221004213143380.png" alt="image-20221004213143380" style="zoom:50%;" />
 
@@ -25,14 +24,7 @@
 
 ## Installation:
 
-##### Standard:
-
 - Download the two source files [ButtonEnhanced.h]( https://github.com/ItsGosho/Button-Enhanced/blob/main/src/ButtonEnhanced.h) & [ButtonEnhanced.cpp](https://github.com/ItsGosho/Button-Enhanced/blob/main/src/ButtonEnhanced.cpp)  from the [latest release]( https://github.com/ItsGosho/Button-Enhanced/releases) 's file **ButtonEnhanced.zip** and place them in your project.
-
-##### PlatformIO:
-
-- TODO: Upload the package and link it
-
 
 
 ## Simple Example:
